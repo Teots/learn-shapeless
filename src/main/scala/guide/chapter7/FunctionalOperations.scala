@@ -25,13 +25,13 @@ object total extends Poly1 {
 object sizeOf extends Poly1 {
   implicit val intCase: Case.Aux[Int, Int] = at(identity)
   implicit val stringCase: Case.Aux[String, Int] = at(_.length)
-  implicit val booleanCase: Case.Aux[Boolean, Int] = at(bool => if(bool) 1 else 0)
+  implicit val booleanCase: Case.Aux[Boolean, Int] = at(bool => if (bool) 1 else 0)
 }
 
 object valueAndSizeOf extends Poly1 {
   implicit val intCase: Case.Aux[Int, Int :: Int :: HNil] = at(num => num :: num :: HNil)
   implicit val stringCase: Case.Aux[String, String :: Int :: HNil] = at(str => str :: str.length :: HNil)
-  implicit val booleanCase: Case.Aux[Boolean, Boolean :: Int :: HNil] = at(bool => bool :: (if(bool) 1 else 0) :: HNil)
+  implicit val booleanCase: Case.Aux[Boolean, Boolean :: Int :: HNil] = at(bool => bool :: (if (bool) 1 else 0) :: HNil)
 }
 
 object sum extends Poly2 {
@@ -40,9 +40,9 @@ object sum extends Poly2 {
 }
 
 object conversions extends Poly1 {
-  implicit val intCase:  Case.Aux[Int, Boolean]   = at(_ > 0)
-  implicit val boolCase: Case.Aux[Boolean, Int]   = at(if(_) 1 else 0)
-  implicit val strCase:  Case.Aux[String, String] = at(identity)
+  implicit val intCase: Case.Aux[Int, Boolean] = at(_ > 0)
+  implicit val boolCase: Case.Aux[Boolean, Int] = at(if (_) 1 else 0)
+  implicit val strCase: Case.Aux[String, String] = at(identity)
 }
 
 trait ProductMapper[A, B, P] {
@@ -51,14 +51,15 @@ trait ProductMapper[A, B, P] {
 
 object ProductMapper {
   implicit def genericProductMapper[A, B, ARepr <: HList, BRepr <: HList, P <: Poly](implicit
-                                            aGen: Generic.Aux[A, ARepr],
-                                            bGen: Generic.Aux[B, BRepr],
-                                                                          map: Mapper.Aux[P, ARepr, BRepr]
-                                         ): ProductMapper[A, B, P] = new ProductMapper[A, B, P] {
+                                                                                     aGen: Generic.Aux[A, ARepr],
+                                                                                     bGen: Generic.Aux[B, BRepr],
+                                                                                     map: Mapper.Aux[P, ARepr, BRepr]
+                                                                                    ): ProductMapper[A, B, P] = new ProductMapper[A, B, P] {
     override def apply(a: A): B = bGen.from(map.apply(aGen.to(a)))
   }
 
   implicit class ProductMapperOps[A](a: A) {
+
     class Builder[B] {
       def apply[P <: Poly](poly: P)(implicit pm: ProductMapper[A, B, P]): B =
         pm.apply(a)
@@ -66,6 +67,7 @@ object ProductMapper {
 
     def mapTo[B]: Builder[B] = new Builder[B]
   }
+
 }
 
 object FunctionalOperations extends App {
@@ -86,7 +88,10 @@ object FunctionalOperations extends App {
   (10 :: "hello" :: 100 :: HNil).foldLeft(0)(sum)
 
   case class IceCream1(name: String, numCherries: Int, inCone: Boolean)
+
   case class IceCream2(name: String, hasCherries: Boolean, numCones: Int)
+
   import ProductMapper._
+
   IceCream1("Sundae", 1, false).mapTo[IceCream2](conversions)
 }
